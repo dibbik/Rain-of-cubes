@@ -1,17 +1,17 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class CubeSpawner : MonoBehaviour
 {
     [SerializeField] private FallingCube _cubePrefab;
-    [SerializeField] private CubeConfig _cubeConfig;
     [SerializeField] private Transform _spawnArea;
     [SerializeField] private float _spawnInterval = 1f;
     [SerializeField] private int _initialPoolSize = 20;
 
     private CubePool _cubePool;
-    private float _spawnTimer;
     private List<FallingCube> _activeCubes = new List<FallingCube>();
+    private Coroutine _spawningCoroutine;
 
     private void Awake()
     {
@@ -19,72 +19,48 @@ public class CubeSpawner : MonoBehaviour
         _cubePool = new CubePool(_cubePrefab, transform, _initialPoolSize);
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        ProcessSpawning();
-        ProcessActiveCubes();
+        _spawningCoroutine = StartCoroutine(SpawningCoroutine());
     }
 
-    private void ProcessSpawning()
+    private void OnDisable()
     {
-        _spawnTimer += Time.deltaTime;
-
-        if (_spawnTimer >= _spawnInterval)
+        if (_spawningCoroutine != null)
         {
-            SpawnCube();
-            _spawnTimer = 0f;
+            StopCoroutine(_spawningCoroutine);
+            _spawningCoroutine = null;
         }
     }
 
-    private void ProcessActiveCubes()
+    private IEnumerator SpawningCoroutine()
     {
-        for (int i = _activeCubes.Count - 1; i >= 0; i--)
+        while (true)
         {
-            FallingCube cube = _activeCubes[i];
-
-            if (cube.CurrentState == CubeState.Expired)
-            {
-                ReturnCubeToPool(cube);
-                _activeCubes.RemoveAt(i);
-            }
+            yield return new WaitForSeconds(_spawnInterval);
+            SpawnCube();
         }
     }
 
     private void SpawnCube()
     {
         FallingCube cube = _cubePool.GetCube();
-        cube.Initialize(_cubeConfig);
+        cube.transform.position = _spawnArea != null ?
+            _spawnArea.position + new Vector3(
+                Random.Range(-_spawnArea.localScale.x / 2f, _spawnArea.localScale.x / 2f),
+                Random.Range(0f, _spawnArea.localScale.y),
+                Random.Range(-_spawnArea.localScale.z / 2f, _spawnArea.localScale.z / 2f)
+            ) : transform.position;
 
-        cube.transform.localScale = Vector3.one;
-
-        Vector3 spawnPosition = CalculateRandomSpawnPosition();
-        cube.transform.position = spawnPosition;
-
+        cube.gameObject.SetActive(true);
+        cube.CubeExpired += OnCubeExpired;
         _activeCubes.Add(cube);
     }
 
-    private Vector3 CalculateRandomSpawnPosition()
+    private void OnCubeExpired(FallingCube cube)
     {
-        if (_spawnArea == null)
-        {
-            return transform.position;
-        }
-
-        Vector3 areaScale = _spawnArea.localScale;
-        Vector3 areaPosition = _spawnArea.position;
-
-        float randomX = Random.Range(-areaScale.x / 2f, areaScale.x / 2f);
-        float randomY = Random.Range(0f, areaScale.y);
-        float randomZ = Random.Range(-areaScale.z / 2f, areaScale.z / 2f);
-
-        Vector3 localOffset = new Vector3(randomX, randomY, randomZ);
-        Vector3 worldPosition = areaPosition + localOffset;
-
-        return worldPosition;
-    }
-
-    private void ReturnCubeToPool(FallingCube cube)
-    {
+        cube.CubeExpired -= OnCubeExpired;
+        _activeCubes.Remove(cube);
         _cubePool.ReturnCube(cube);
     }
 

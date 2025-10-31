@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(FallingCube))]
 public class CubePool
 {
     private Queue<FallingCube> _availableCubes = new Queue<FallingCube>();
@@ -14,29 +15,25 @@ public class CubePool
 
         for (int i = 0; i < initialSize; i++)
         {
-            FallingCube cube = Object.Instantiate(_cubePrefab, _parentTransform);
-            cube.gameObject.SetActive(false);
-            _availableCubes.Enqueue(cube);
+            CreateNewCube();
         }
     }
 
     public FallingCube GetCube()
     {
-        if (_availableCubes.Count == 0)
-        {
-            FallingCube cube = Object.Instantiate(_cubePrefab, _parentTransform);
-            cube.gameObject.SetActive(false);
-            _availableCubes.Enqueue(cube);
-        }
-
-        FallingCube availableCube = _availableCubes.Dequeue();
-        availableCube.gameObject.SetActive(true);
-        return availableCube;
+        return _availableCubes.Count > 0 ? _availableCubes.Dequeue() : CreateNewCube();
     }
 
     public void ReturnCube(FallingCube cube)
     {
         cube.gameObject.SetActive(false);
         _availableCubes.Enqueue(cube);
+    }
+
+    private FallingCube CreateNewCube()
+    {
+        FallingCube cube = Object.Instantiate(_cubePrefab, _parentTransform);
+        cube.gameObject.SetActive(false);
+        return cube;
     }
 }

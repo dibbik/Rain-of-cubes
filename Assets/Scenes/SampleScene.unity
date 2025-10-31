@@ -200,7 +200,7 @@ GameObject:
   - component: {fileID: 565048428}
   m_Layer: 0
   m_Name: Main Plane
-  m_TagString: Untagged
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -400,7 +400,7 @@ GameObject:
   - component: {fileID: 822429489}
   m_Layer: 0
   m_Name: Platform (1)
-  m_TagString: Untagged
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -625,7 +625,7 @@ GameObject:
   - component: {fileID: 1897077804}
   m_Layer: 0
   m_Name: Platform
-  m_TagString: Untagged
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -752,7 +752,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1898503480}
-  - component: {fileID: 1898503479}
   - component: {fileID: 1898503481}
   m_Layer: 0
   m_Name: Falling Cube System
@@ -761,19 +760,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1898503479
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1898503477}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 082f6f26f27928d478c655a226e0593e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _cubeSpawner: {fileID: 1898503481}
 --- !u!4 &1898503480
 Transform:
   m_ObjectHideFlags: 0
@@ -802,10 +788,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cubePrefab: {fileID: 6778381145923268044, guid: 20e223d4ad2ff25448b7a01c19f587f7, type: 3}
-  _cubeConfig:
-    InitialColor: {r: 1, g: 1, b: 1, a: 1}
-    MinLifetime: 2
-    MaxLifetime: 5
   _spawnArea: {fileID: 177884860}
   _spawnInterval: 1
   _initialPoolSize: 20

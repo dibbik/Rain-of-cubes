@@ -1,84 +1,61 @@
 using UnityEngine;
+using System.Collections;
 
+[RequireComponent(typeof(Renderer), typeof(Rigidbody))]
 public class FallingCube : MonoBehaviour
 {
     [SerializeField] private Renderer _cubeRenderer;
     [SerializeField] private Rigidbody _rigidbody;
 
-    private CubeState _currentState = CubeState.Falling;
-
-    private float _lifeTimer;
-    private float _totalLifetime;
-
-    private CubeConfig _config;
-
     private bool _hasChangedColor = false;
+    private Coroutine _lifeTimeCoroutine;
 
-    public CubeState CurrentState => _currentState;
+    public event System.Action<FallingCube> CubeExpired;
 
-    public void Initialize(CubeConfig config)
+    private void Awake()
     {
-        _config = config;
-        _currentState = CubeState.Falling;
-        _hasChangedColor = false;
-        _lifeTimer = 0f;
-        _totalLifetime = 0f;
+        _cubeRenderer = GetComponent<Renderer>();
+        _rigidbody = GetComponent<Rigidbody>();
+    }
 
-        ApplyColor(_config.InitialColor);
+    private void OnEnable()
+    {
+        _hasChangedColor = false;
+        _cubeRenderer.material.color = Color.white;
         _rigidbody.velocity = Vector3.zero;
         _rigidbody.angularVelocity = Vector3.zero;
     }
 
-    private void Update()
-    {
-        if (_currentState == CubeState.Touched)
-        {
-            _lifeTimer += Time.deltaTime;
-
-            if (_lifeTimer >= _totalLifetime)
-            {
-                _currentState = CubeState.Expired;
-            }
-        }
-    }
-
-    private void ApplyColor(Color color)
-    {
-        if (_cubeRenderer != null)
-        {
-            _cubeRenderer.material.color = color;
-        }
-    }
-
-    private Color GenerateRandomColor()
-    {
-        return new Color(
-            Random.Range(0f, 1f),
-            Random.Range(0f, 1f),
-            Random.Range(0f, 1f)
-        );
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
-        if (_currentState != CubeState.Falling) 
-            return;
+        if (!collision.gameObject.CompareTag("Platform") || _hasChangedColor) return;
 
-        _currentState = CubeState.Touched;
-
-        if (!_hasChangedColor)
-        {
-            Color randomColor = GenerateRandomColor();
-            ApplyColor(randomColor);
-            _hasChangedColor = true;
-        }
-
-        _totalLifetime = Random.Range(_config.MinLifetime, _config.MaxLifetime);
+        ProcessTouch();
     }
 
-    private void Reset()
+    private void ProcessTouch()
     {
-        _cubeRenderer = GetComponent<Renderer>();
-        _rigidbody = GetComponent<Rigidbody>();
+        _hasChangedColor = true;
+        _cubeRenderer.material.color = Random.ColorHSV();
+
+        if (_lifeTimeCoroutine != null)
+            StopCoroutine(_lifeTimeCoroutine);
+
+        _lifeTimeCoroutine = StartCoroutine(LifeTimeCoroutine(Random.Range(2f, 5f)));
+    }
+
+    private IEnumerator LifeTimeCoroutine(float lifeTime)
+    {
+        yield return new WaitForSeconds(lifeTime);
+        CubeExpired?.Invoke(this);
+    }
+
+    private void OnDisable()
+    {
+        if (_lifeTimeCoroutine != null)
+        {
+            StopCoroutine(_lifeTimeCoroutine);
+            _lifeTimeCoroutine = null;
+        }
     }
 }
