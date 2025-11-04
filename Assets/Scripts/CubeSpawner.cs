@@ -1,19 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class CubeSpawner : MonoBehaviour
 {
-    private const float DefaultSpawnInterwal = 1f; 
-    private const int DefaultSpawnSize = 20;
+    private const float DefaultSpawnInterval = 1f;
+    private const int DefaultPoolSize = 20;
 
     [SerializeField] private FallingCube _cubePrefab;
     [SerializeField] private Transform _spawnArea;
-    [SerializeField] private float _spawnInterval = DefaultSpawnInterwal;
-    [SerializeField] private int _initialPoolSize = DefaultSpawnSize;
+    [SerializeField] private float _spawnInterval = DefaultSpawnInterval;
+    [SerializeField] private int _initialPoolSize = DefaultPoolSize;
 
     private CubePool _cubePool;
-    private List<FallingCube> _activeCubes = new List<FallingCube>();
     private Coroutine _spawningCoroutine;
     private WaitForSeconds _spawnWait;
 
@@ -40,7 +38,7 @@ public class CubeSpawner : MonoBehaviour
 
     private IEnumerator SpawningCoroutine()
     {
-        while (true)
+        while (enabled)
         {
             yield return _spawnWait;
             SpawnCube();
@@ -57,7 +55,6 @@ public class CubeSpawner : MonoBehaviour
         cube.transform.position = spawnPosition;
         cube.gameObject.SetActive(true);
         cube.CubeExpired += OnCubeExpired;
-        _activeCubes.Add(cube);
     }
 
     private Vector3 CalculateSpawnPosition()
@@ -74,7 +71,6 @@ public class CubeSpawner : MonoBehaviour
     private void OnCubeExpired(FallingCube cube)
     {
         cube.CubeExpired -= OnCubeExpired;
-        _activeCubes.Remove(cube);
         _cubePool.ReturnCube(cube);
     }
 

@@ -4,12 +4,11 @@ using System.Collections;
 [RequireComponent(typeof(Renderer), typeof(Rigidbody))]
 public class FallingCube : MonoBehaviour
 {
-    [SerializeField] private Renderer _cubeRenderer;
-    [SerializeField] private Rigidbody _rigidbody;
-
     private const float MinLifeTime = 2f;
     private const float MaxLifeTime = 5f;
 
+    private Renderer _cubeRenderer;
+    private Rigidbody _rigidbody;
     private bool _hasChangedColor = false;
     private Coroutine _lifeTimeCoroutine;
 
@@ -33,8 +32,15 @@ public class FallingCube : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (!collision.gameObject.CompareTag("Platform") || _hasChangedColor) return;
+        if (!IsPlatform(collision.gameObject) || _hasChangedColor)
+            return;
+
         ProcessTouch();
+    }
+
+    private bool IsPlatform(GameObject gameObject)
+    {
+        return gameObject.GetComponent<Platform>() != null;
     }
 
     private void Initialize()
