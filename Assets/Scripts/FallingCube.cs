@@ -7,6 +7,9 @@ public class FallingCube : MonoBehaviour
     [SerializeField] private Renderer _cubeRenderer;
     [SerializeField] private Rigidbody _rigidbody;
 
+    private const float MinLifeTime = 2f;
+    private const float MaxLifeTime = 5f;
+
     private bool _hasChangedColor = false;
     private Coroutine _lifeTimeCoroutine;
 
@@ -20,17 +23,36 @@ public class FallingCube : MonoBehaviour
 
     private void OnEnable()
     {
-        _hasChangedColor = false;
-        _cubeRenderer.material.color = Color.white;
-        _rigidbody.velocity = Vector3.zero;
-        _rigidbody.angularVelocity = Vector3.zero;
+        Initialize();
+    }
+
+    private void OnDisable()
+    {
+        Cleanup();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (!collision.gameObject.CompareTag("Platform") || _hasChangedColor) return;
-
         ProcessTouch();
+    }
+
+    private void Initialize()
+    {
+        _hasChangedColor = false;
+        _cubeRenderer.material.color = Color.white;
+        _rigidbody.velocity = Vector3.zero;
+        _rigidbody.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
+    }
+
+    private void Cleanup()
+    {
+        if (_lifeTimeCoroutine != null)
+        {
+            StopCoroutine(_lifeTimeCoroutine);
+            _lifeTimeCoroutine = null;
+        }
     }
 
     private void ProcessTouch()
@@ -41,21 +63,13 @@ public class FallingCube : MonoBehaviour
         if (_lifeTimeCoroutine != null)
             StopCoroutine(_lifeTimeCoroutine);
 
-        _lifeTimeCoroutine = StartCoroutine(LifeTimeCoroutine(Random.Range(2f, 5f)));
+        _lifeTimeCoroutine = StartCoroutine(LifeTimeCoroutine());
     }
 
-    private IEnumerator LifeTimeCoroutine(float lifeTime)
+    private IEnumerator LifeTimeCoroutine()
     {
+        float lifeTime = Random.Range(MinLifeTime, MaxLifeTime);
         yield return new WaitForSeconds(lifeTime);
         CubeExpired?.Invoke(this);
-    }
-
-    private void OnDisable()
-    {
-        if (_lifeTimeCoroutine != null)
-        {
-            StopCoroutine(_lifeTimeCoroutine);
-            _lifeTimeCoroutine = null;
-        }
     }
 }

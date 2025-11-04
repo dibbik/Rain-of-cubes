@@ -4,19 +4,24 @@ using System.Collections.Generic;
 
 public class CubeSpawner : MonoBehaviour
 {
+    private const float DefaultSpawnInterwal = 1f; 
+    private const int DefaultSpawnSize = 20;
+
     [SerializeField] private FallingCube _cubePrefab;
     [SerializeField] private Transform _spawnArea;
-    [SerializeField] private float _spawnInterval = 1f;
-    [SerializeField] private int _initialPoolSize = 20;
+    [SerializeField] private float _spawnInterval = DefaultSpawnInterwal;
+    [SerializeField] private int _initialPoolSize = DefaultSpawnSize;
 
     private CubePool _cubePool;
     private List<FallingCube> _activeCubes = new List<FallingCube>();
     private Coroutine _spawningCoroutine;
+    private WaitForSeconds _spawnWait;
 
     private void Awake()
     {
         ValidateDependencies();
         _cubePool = new CubePool(_cubePrefab, transform, _initialPoolSize);
+        _spawnWait = new WaitForSeconds(_spawnInterval);
     }
 
     private void OnEnable()
@@ -37,7 +42,7 @@ public class CubeSpawner : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(_spawnInterval);
+            yield return _spawnWait;
             SpawnCube();
         }
     }
@@ -45,16 +50,25 @@ public class CubeSpawner : MonoBehaviour
     private void SpawnCube()
     {
         FallingCube cube = _cubePool.GetCube();
-        cube.transform.position = _spawnArea != null ?
-            _spawnArea.position + new Vector3(
-                Random.Range(-_spawnArea.localScale.x / 2f, _spawnArea.localScale.x / 2f),
-                Random.Range(0f, _spawnArea.localScale.y),
-                Random.Range(-_spawnArea.localScale.z / 2f, _spawnArea.localScale.z / 2f)
-            ) : transform.position;
 
+        Vector3 spawnPosition = _spawnArea != null ?
+            CalculateSpawnPosition() : transform.position;
+
+        cube.transform.position = spawnPosition;
         cube.gameObject.SetActive(true);
         cube.CubeExpired += OnCubeExpired;
         _activeCubes.Add(cube);
+    }
+
+    private Vector3 CalculateSpawnPosition()
+    {
+        const float HalfDivider = 2f;
+
+        float randomX = Random.Range(-_spawnArea.localScale.x / HalfDivider, _spawnArea.localScale.x / HalfDivider);
+        float randomY = Random.Range(0f, _spawnArea.localScale.y);
+        float randomZ = Random.Range(-_spawnArea.localScale.z / HalfDivider, _spawnArea.localScale.z / HalfDivider);
+
+        return _spawnArea.position + new Vector3(randomX, randomY, randomZ);
     }
 
     private void OnCubeExpired(FallingCube cube)
